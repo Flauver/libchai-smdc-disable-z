@@ -30,7 +30,7 @@ jobs:
     - name: Upload artifacts (MSVC)
       uses: actions/upload-artifact@v4
       with:
-        name: libchai-smdc-控制z键使用率
+        name: libchai-smdc-disable-z
         path: target/x86_64-pc-windows-msvc/release/*.exe
         
 #  build-gnu:
