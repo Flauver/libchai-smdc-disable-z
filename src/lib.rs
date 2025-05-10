@@ -164,12 +164,16 @@ pub struct 测试目标函数 {
 pub struct 测试指标 {
     默认指标: 默认指标,
     z键使用率: f64,
+    一简率: f64,
+    二简率: f64,
 }
 
 impl Display for 测试指标 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}\n", self.默认指标)?;
-        write!(f, "z键使用率：{}", self.z键使用率)
+        write!(f, "z键使用率：{}；\n", self.z键使用率)?;
+        write!(f, "一简率：{}；", self.一简率)?;
+        write!(f, "二简率：{}；", self.二简率)
     }
 }
 
@@ -195,6 +199,8 @@ impl 目标函数 for 测试目标函数 {
         let (默认指标, 损失函数) = self.默认目标函数.计算(编码结果, 映射);
         let mut 总按键数 = 0.0;
         let mut z键按键数 = 0.0;
+        let mut 一简数 = 0.0;
+        let mut 二简数 = 0.0;
         for 编码结果 in 编码结果.iter() {
             let 简码  = 编码结果.简码.实际编码;
             let mut 部分编码 = 简码;
@@ -209,12 +215,21 @@ impl 目标函数 for 测试目标函数 {
                     z键按键数 += 1.0;
                 }
             }
+            if 编码结果.简码.原始编码 < self.进制 {
+                一简数 += 1.0;
+            } else if 编码结果.简码.原始编码 < self.进制 * self.进制 { 
+                二简数 += 1.0;
+            }
         }
         let z键使用率 = z键按键数 / 总按键数;
-        let 损失函数 = 损失函数 + if z键使用率 > 0.0175 { 10.0 } else { 0.0 };
+        let 一简率 = 一简数 / 编码结果.len() as f64;
+        let 二简率 = 二简数 / 编码结果.len() as f64;
+        let 损失函数 = 损失函数 + if z键使用率 > 0.0175 { 10.0 } else { 0.0 } + 一简率 * -2.0 + 二简率 * -1.0;
         let 指标 = 测试指标 {
             默认指标,
             z键使用率,
+            一简率,
+            二简率,
         };
         (指标, 损失函数)
     }
