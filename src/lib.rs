@@ -130,16 +130,6 @@ impl 四码定长编码器 {
                     简码信息.更新(二简实际, false);
                     continue;
                 }
-                let 三简原始 = 全码原始 % (进制 * 进制 * 进制);
-                let 重数 = self.全码空间[三简原始 as usize] + self.简码空间[三简原始 as usize];
-                if 重数 == 0 {
-                    简码信息.原始编码 = 三简原始;
-                    简码信息.原始编码候选位置 = self.简码空间[三简原始 as usize];
-                    self.简码空间[三简原始 as usize] += 1;
-                    let 三简实际 = 三简原始 + self.空格 * 进制 * 进制 * 进制;
-                    简码信息.更新(三简实际, false);
-                    continue;
-                }
             }
             // 多字词以及没有简码的一字词
             let 全码是否重码 = self.简码空间[全码原始 as usize] > 0;
