@@ -2,7 +2,9 @@ use chai::data::{元素, 元素映射, 可编码对象, 数据, 编码信息};
 use chai::encoders::编码器;
 use chai::objectives::default::默认目标函数;
 use chai::objectives::metric::默认指标;
+use chai::objectives::目标函数;
 use chai::错误;
+use serde::Serialize;
 use std::fmt::Display;
 use std::iter::zip;
 
@@ -164,9 +166,11 @@ impl 编码器 for 四码定长编码器 {
 
 pub struct 测试目标函数 {
     默认目标函数: 默认目标函数,
+    进制: u64,
     z: u64,
 }
 
+#[derive(Clone, Serialize)]
 pub struct 测试指标 {
     默认指标: 默认指标,
     z键使用率: f64,
@@ -182,10 +186,46 @@ impl Display for 测试指标 {
 impl 测试目标函数 {
     pub fn 新建(数据: &数据) -> Result<Self, 错误> {
         let 默认目标函数 = 默认目标函数::新建(数据)?;
+        let 进制 = 数据.进制;
         let z = 数据.键转数字[&'z'];
         Ok(Self {
             默认目标函数,
-            z
+            进制,
+            z,
         })
+    }
+}
+
+impl 目标函数 for 测试目标函数 {
+    type 目标值 = 测试指标;
+
+    fn 计算(
+        &mut self, 编码结果: &mut [编码信息], 映射: &元素映射
+    ) -> (Self::目标值, f64) {
+        let (默认指标, 损失函数) = self.默认目标函数.计算(编码结果, 映射);
+        let mut 总按键数 = 0.0;
+        let mut z键按键数 = 0.0;
+        for 编码结果 in 编码结果.iter() {
+            let 简码  = 编码结果.简码.实际编码;
+            let mut 部分编码 = 简码;
+            while 部分编码 > 0 {
+                let 键 = 部分编码 % self.进制;
+                部分编码 /= self.进制;
+                if 键 == 0 {
+                    continue;
+                }
+                总按键数 += 1.0;
+                if 键 == self.z {
+                    z键按键数 += 1.0;
+                }
+            }
+        }
+        let z键使用率 = z键按键数 / 总按键数;
+        let 损失函数 = 损失函数 + if z键使用率 > 0.0175 { 10.0 } else { 0.0 };
+        let 指标 = 测试指标 {
+            默认指标,
+            z键使用率,
+        };
+        (指标, 损失函数)
     }
 }
