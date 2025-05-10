@@ -1,6 +1,9 @@
 use chai::data::{元素, 元素映射, 可编码对象, 数据, 编码信息};
 use chai::encoders::编码器;
+use chai::objectives::default::默认目标函数;
+use chai::objectives::metric::默认指标;
 use chai::错误;
+use std::fmt::Display;
 use std::iter::zip;
 
 pub struct 四码定长编码器 {
@@ -156,5 +159,33 @@ impl 编码器 for 四码定长编码器 {
         self.输出全码(映射, 移动的元素);
         self.输出简码();
         &mut self.编码结果
+    }
+}
+
+pub struct 测试目标函数 {
+    默认目标函数: 默认目标函数,
+    z: u64,
+}
+
+pub struct 测试指标 {
+    默认指标: 默认指标,
+    z键使用率: f64,
+}
+
+impl Display for 测试指标 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}\n", self.默认指标)?;
+        write!(f, "z键使用率：{}", self.z键使用率)
+    }
+}
+
+impl 测试目标函数 {
+    pub fn 新建(数据: &数据) -> Result<Self, 错误> {
+        let 默认目标函数 = 默认目标函数::新建(数据)?;
+        let z = 数据.键转数字[&'z'];
+        Ok(Self {
+            默认目标函数,
+            z
+        })
     }
 }
